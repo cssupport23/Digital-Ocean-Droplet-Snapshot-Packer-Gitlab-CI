@@ -1,0 +1,61 @@
+---
+- name: Update APT package index
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Install curl (required for Node.js installation)
+  apt:
+    name: curl
+    state: present
+  become: yes
+
+
+- name: Add NodeSource repository for Node.js 20.x
+  shell: "curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+  become: yes
+
+
+- name: Install Node.js and npm
+  apt:
+    name: nodejs
+    state: present
+  become: yes
+
+- name: Install PM2 globally using npm
+  npm:
+    name: pm2
+    global: yes
+  become: yes
+
+
+
+      
+- name: Clone the App repository using HTTP with credentials
+  git:
+    repo: "{{ app_rep }}"
+    dest: /var/www/html
+    version: "{{ version }}"
+    clone: yes
+    update: yes
+    force: yes
+
+
+- name: verify 
+  shell: |
+    pwd
+    whoami
+    ls -alh /var/www/html
+    
+  register: command_output
+
+- name: Print the output of the shell command
+  debug:
+    var: command_output.stdout
+
+- name: Run npm install in the application directory
+  command: npm install
+  args:
+    chdir: /var/www/html
+
+
